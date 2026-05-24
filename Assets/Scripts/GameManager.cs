@@ -20,6 +20,32 @@ public class GameManager : MonoBehaviour
 
     public int highestLevelUnlocked = 1;
 
+    public static event System.Action<int, int, int, bool> onVictory;
+    public static event System.Action<int, int, int> onDefeat;
+
+    // Reemplaza OnLevelComplete():
+    void OnLevelComplete()
+    {
+        int bonus = _tookDamage ? 0 : 200;
+        _pointsThisRun += 100 + bonus;
+        totalPoints += _pointsThisRun;
+
+        if (currentLevel == 1)
+        {
+            PlayerPrefs.SetInt("Level2Unlocked", 1);
+            PlayerPrefs.Save();
+        }
+
+        onVictory?.Invoke(_wavesCleared, _enemiesDefeated, _pointsThisRun, bonus > 0);
+    }
+
+    // Reemplaza OnPlayerDeath():
+    public void OnPlayerDeath()
+    {
+        isGameOver = true;
+        onDefeat?.Invoke(_wavesCleared, _enemiesDefeated, _pointsThisRun);
+    }
+
     void Awake()
     {
         if (Instance == null)
@@ -55,28 +81,6 @@ public class GameManager : MonoBehaviour
         _pointsThisRun += 3;
     }
 
-    void OnLevelComplete()
-    {
-        _endScreen = FindFirstObjectByType<EndScreenUI>();
-
-        int bonus = _tookDamage ? 0 : 200;
-        _pointsThisRun += 100 + bonus;
-        totalPoints += _pointsThisRun;
-
-        // Desbloquear siguiente nivel
-        if (currentLevel >= highestLevelUnlocked)
-        {
-            highestLevelUnlocked = currentLevel + 1;
-            PlayerPrefs.SetInt("Level2Unlocked", 1);
-            PlayerPrefs.Save();
-        }
-
-        _endScreen?.ShowVictory(_wavesCleared,
-                                _enemiesDefeated,
-                                _pointsThisRun,
-                                bonus > 0);
-    }
-
     public void OnWaveCleared()
     {
         _wavesCleared++;
@@ -86,14 +90,6 @@ public class GameManager : MonoBehaviour
     public void OnPlayerHit()
     {
         _tookDamage = true;
-    }
-
-    public void OnPlayerDeath()
-    {
-        Debug.Log("OnPlayerDeath() llamado");
-        Debug.Log("_endScreen: " + (_endScreen != null));
-        isGameOver = true;
-        _endScreen?.ShowDefeat(_wavesCleared, _enemiesDefeated, _pointsThisRun);
     }
 
     public void StartLevel(int level)

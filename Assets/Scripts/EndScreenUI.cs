@@ -30,6 +30,18 @@ public class EndScreenUI : MonoBehaviour
     public Button btnMainMenuD;
     public Button btnDivineUpgradesD;
 
+    void OnEnable()
+    {
+        GameManager.onVictory += ShowVictory;
+        GameManager.onDefeat += ShowDefeat;
+    }
+
+    void OnDisable()
+    {
+        GameManager.onVictory -= ShowVictory;
+        GameManager.onDefeat -= ShowDefeat;
+    }
+
     void Start()
     {
         panel.SetActive(false);
@@ -78,4 +90,6 @@ public class EndScreenUI : MonoBehaviour
         pointsText.text = $"Points earned:     +{points} pts";
         bonusText.text = "";
     }
+
+
 }
